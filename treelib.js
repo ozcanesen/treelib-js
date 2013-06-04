@@ -2026,10 +2026,14 @@ function pan_to_mouse(e) {
 
 function gradual_pan(viewport, dx, dy) {
     steps = 25;
-    duration = 0.2;
+    duration = 0.5;
     i = 0;
+    last_time = new Date()/1000;
     function frame() {
-        i += 1/steps;
+        this_time = new Date()/1000;
+        time_elapsed = this_time - last_time;
+        last_time = this_time;
+        i += time_elapsed/duration;
         pan(viewport, dx/steps, dy/steps)
         if (i >= 1) {
             clearInterval(id);
@@ -2053,13 +2057,17 @@ function gradual_zoom(viewport, scale) {
     old_scale = initial_scale;
     
     steps = 25;
-    duration = 0.2;
+    duration = 0.5;
     i = 0;
+    last_time = new Date()/1000;
     function frame() {
+        this_time = new Date()/1000;
+        time_elapsed = this_time - last_time;
+        last_time = this_time;
         this_scale = initial_scale + (new_scale-initial_scale) * smooth_scale(i);
         this_step = this_scale / old_scale;
         old_scale = this_scale;
-        i += 1/steps;
+        i += time_elapsed/duration;
         zoom(viewport, this_step)
         if (i >= 1) {
             clearInterval(id);
