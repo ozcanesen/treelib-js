@@ -6,6 +6,9 @@
 
 //--------------------------------------------------------------------------------------------------
 // http://stackoverflow.com/questions/3019278/any-way-to-specify-the-base-of-math-log-in-javascript
+var VIEWER_WIDTH = 600;
+var VIEWER_HEIGHT = 500;
+
 function log10(val) {
   return Math.log(val) / Math.LN10;
 }
@@ -1789,7 +1792,7 @@ function draw_tree(element_id, drawing_type)
 		svg.appendChild(g);
 		
 		
-		td.Init(t, {svg_id: 'viewport', width:500, height:500, fontHeight:10, root_length:0.1} );
+		td.Init(t, {svg_id: 'viewport', width:VIEWER_WIDTH, height:VIEWER_HEIGHT, fontHeight:10, root_length:0.1} );
 		
 		td.CalcCoordinates();
 		td.Draw();
