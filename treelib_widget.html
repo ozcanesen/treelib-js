@@ -1,0 +1,24 @@
+<img src="images/radial.svg" class="drawing_type" onclick="draw_tree('newick', 'radial')"/>
+<img src="images/cladogram.svg" class="drawing_type" onclick="draw_tree('newick', 'cladogram')"/>
+<img src="images/rectangle.svg" class="drawing_type" onclick="draw_tree('newick', 'rectanglecladogram')"/>
+<img src="images/phylogram.svg" class="drawing_type" onclick="draw_tree('newick', 'phylogram')"/>
+<img src="images/circle.svg" class="drawing_type" onclick="draw_tree('newick', 'circle')"/>
+<img src="images/circlephylogram.svg" class="drawing_type" onclick="draw_tree('newick', 'circlephylogram')"/>
+</div>
+
+<div id="treeContainer" ondblclick="pan_to_mouse(event); zoom_in();" oncontextmenu="pan_to_mouse(event); zoom_out(); return false">
+    <div id="zoomControls">
+        <img src="images/zoom-in.svg" onclick="zoom_in()" ondblclick="event.stopPropagation()"/>
+        <img src="images/zoom-out.svg" onclick="zoom_out()" ondblclick="event.stopPropagation()"/>
+        <img src="images/left.svg" onclick="pan_btn('l')" ondblclick="event.stopPropagation()"/>
+        <img src="images/up.svg" onclick="pan_btn('u')" ondblclick="event.stopPropagation()"/>
+        <img src="images/down.svg" onclick="pan_btn('d')" ondblclick="event.stopPropagation()"/>
+        <img src="images/right.svg" onclick="pan_btn('r')" ondblclick="event.stopPropagation()"/>
+    </div>
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
+	    <g id="viewport">
+	    </g>
+    </svg>
+</div>
+
+<p><span id="message"></span></p>

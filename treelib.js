@@ -1704,120 +1704,20 @@ function draw_tree_labels(nexus, t, drawing_type) {
 }
 
 
-//--------------------------------------------------------------------------------------------------
-// Draw a tree using Newick tree description for tag "element"
-function draw_tree(element)
-{
-	var resize = false;
-	var height = 200;
-	var width = 200;
-	
-	if (element.style.width)
-	{
-		width = parseInt(element.style.width);
-	}
-	if (element.style.height)
-	{
-		height = parseInt(element.style.height);
-	}
-
-	width = Math.min(width, height);
-	
-	element.style.width = width + 'px';
-	element.style.height = height + 'px';
-
-	element.style.overflow = 'hidden';
-    
-    var t = new Tree();
-	t.Parse(element.innerHTML);
-    
-    element.innerHTML = '';
-    
-    var svg_id = uniqueid();
-    var svg_g_id = uniqueid();
-    
-	var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-	svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
-	svg.setAttribute('id',svg_id);
-	svg.setAttribute('version','1.1');
-	svg.setAttribute('height',height);
-	svg.setAttribute('width',width);
-	element.appendChild(svg);
-	
-	var g = document.createElementNS('http://www.w3.org/2000/svg','g');
-	g.setAttribute('id',svg_g_id);
-	svg.appendChild(g);
-		
-	var td = null;
-	var drawing_type = 'cladogram';
-	
-	if (element.hasAttribute('data-drawing-type'))
-	{
-		drawing_type = element.getAttribute('data-drawing-type');
-	}
-	
-	switch (drawing_type)
-	{
-		case 'rectanglecladogram':
-			td = new RectangleTreeDrawer();
-			break;
-	
-		case 'phylogram':
-			td = new PhylogramTreeDrawer();
-			break;
-			
-		case 'circle':
-			td = new CircleTreeDrawer();
-			break;
-			
-		case 'circlephylogram':
-			td = new CirclePhylogramDrawer();
-			break;
-			
-		case 'cladogram':
-		default:
-			td = new TreeDrawer();
-			break;
-	}
-
-	td.Init(t, {svg_id: svg_g_id, width:width, height:height, root_length:0.1} );
-
-	td.CalcCoordinates();
-	td.Draw();
-	
-	var bbox = svg.getBBox();
-	
-	var scale = Math.min(width/bbox.width, height/bbox.height);
-	
-	var viewport = document.getElementById(svg_g_id);
-	viewport.setAttribute('transform', 'scale(' + scale + ')');
-	
-	// centre
-	bbox = svg.getBBox();
-		
-	if (bbox.x < 0)
-	{
-		var cw = (bbox.x + bbox.width/2) - width/2;
-		var ch = (bbox.y + bbox.height/2) - height/2;
-		viewport.setAttribute('transform', 'translate(' + -cw + ' ' + -ch + ')');
-	}
-	
-	
-}
-
-
 // http://stackoverflow.com/questions/498970/how-do-i-trim-a-string-in-javascript
 if (!String.prototype.trim)
 {
 	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
 }
 
-function showtree(element_id)
+function draw_tree(element_id, drawing_type)
 {
     var t = new Tree();
     var element = document.getElementById(element_id);
     var newick = element.value;
     newick = newick.trim(newick);
+    
+    document.getElementById('message').innerHTML='Parsing...';
 	t.Parse(newick);
 
 	if (t.error != 0)
@@ -1826,14 +1726,13 @@ function showtree(element_id)
 	}
 	else
 	{
-		document.getElementById('message').innerHTML='Parsed OK';
+		document.getElementById('message').innerHTML='';
 				
 		t.ComputeWeights(t.root);
 		
 		var td = null;
 		
 		var selectmenu = document.getElementById('style');
-		var drawing_type = (selectmenu.options[selectmenu.selectedIndex].value);
 		
 		switch (drawing_type)
 		{
@@ -1866,6 +1765,10 @@ function showtree(element_id)
 					td = new CircleTreeDrawer();
 				}
 				break;
+				
+			case 'radial':
+			    td = new RadialTreeDrawer();
+			    break
 				
 			case 'cladogram':
 			default:
@@ -2011,6 +1914,17 @@ function zoom_in() {
 function zoom_out() {
     var viewport = document.getElementById('viewport');
     gradual_zoom(viewport, 0.75);
+}
+
+function pan_btn(dir) {
+    var viewport = document.getElementById('viewport');
+    matrix = getMatrix(viewport);
+    scale = matrix[0];
+    dx = dir == 'l' ? 50 : (dir == 'r' ? -50 : 0);
+    dy = dir == 'u' ? 50 : (dir == 'd' ? -50 : 0);
+    dx *= scale;
+    dy *= scale;
+    gradual_pan(viewport, dx, dy);
 }
 
 function pan_to_mouse(e) {

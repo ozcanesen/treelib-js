@@ -1,0 +1,29 @@
+div#treeContainer {
+    position: relative;
+    width:500px;
+    height:500px;
+    background-color:white;
+    border:2px solid rgb(228,228,228);
+}
+
+div#treeContainer #zoomControls {
+    position: absolute;
+    z-index: 10;
+}
+
+div#treeContainer #zoomControls img {
+    width: 50px;
+}
+
+div#treeContainer svg {
+    position: absolute;
+    left:0px;
+    top:0px;
+    width:100%;
+    height:100%;
+}
+
+.drawing_type {
+    width: 75px;
+    border:2px solid rgb(228,228,228);
+}
