@@ -1,6 +1,9 @@
 div#treeControls {
     position: relative;
     width:500px;
+    background-color:white;
+    border:2px solid rgb(228,228,228);
+    border-bottom: none;
 }
 
 div#treeContainer {
@@ -9,6 +12,7 @@ div#treeContainer {
     height:500px;
     background-color:white;
     border:2px solid rgb(228,228,228);
+    border-top: none;
 }
 
 div#treeContainer #zoomControls {
@@ -28,7 +32,8 @@ div#treeContainer svg {
     height:100%;
 }
 
-.drawing_type {
+div#treeControls .drawing_type {
     width: 75px;
     border:2px solid rgb(228,228,228);
+    border-top: none;
 }
