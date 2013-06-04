@@ -1920,8 +1920,9 @@ function pan_btn(dir) {
     var viewport = document.getElementById('viewport');
     matrix = getMatrix(viewport);
     scale = matrix[0];
-    dx = dir == 'l' ? 50 : (dir == 'r' ? -50 : 0);
-    dy = dir == 'u' ? 50 : (dir == 'd' ? -50 : 0);
+    d = 100;
+    dx = dir == 'l' ? d : (dir == 'r' ? -d : 0);
+    dy = dir == 'u' ? d : (dir == 'd' ? -d : 0);
     dx *= scale;
     dy *= scale;
     gradual_pan(viewport, dx, dy);
@@ -1940,7 +1941,7 @@ function pan_to_mouse(e) {
 
 function gradual_pan(viewport, dx, dy) {
     steps = 25;
-    duration = 0.5;
+    duration = 0.25;
     i = 0;
     last_time = new Date()/1000;
     function frame() {
