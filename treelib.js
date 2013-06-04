@@ -1805,3 +1805,234 @@ function draw_tree(element)
 	
 }
 
+
+// http://stackoverflow.com/questions/498970/how-do-i-trim-a-string-in-javascript
+if (!String.prototype.trim)
+{
+	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+}
+
+function showtree(element_id)
+{
+    var t = new Tree();
+    var element = document.getElementById(element_id);
+    var newick = element.value;
+    newick = newick.trim(newick);
+	t.Parse(newick);
+
+	if (t.error != 0)
+	{
+		document.getElementById('message').innerHTML='Error parsing tree';
+	}
+	else
+	{
+		document.getElementById('message').innerHTML='Parsed OK';
+				
+		t.ComputeWeights(t.root);
+		
+		var td = null;
+		
+		var selectmenu = document.getElementById('style');
+		var drawing_type = (selectmenu.options[selectmenu.selectedIndex].value);
+		
+		switch (drawing_type)
+		{
+			case 'rectanglecladogram':
+				td = new RectangleTreeDrawer();
+				break;
+		
+			case 'phylogram':
+				if (t.has_edge_lengths)
+				{
+					td = new PhylogramTreeDrawer();
+				}
+				else
+				{
+					td = new RectangleTreeDrawer();
+				}
+				break;
+				
+			case 'circle':
+				td = new CircleTreeDrawer();
+				break;
+				
+			case 'circlephylogram':
+				if (t.has_edge_lengths)
+				{
+					td = new CirclePhylogramDrawer();
+				}
+				else
+				{
+					td = new CircleTreeDrawer();
+				}
+				break;
+				
+			case 'cladogram':
+			default:
+				td = new TreeDrawer();
+				break;
+		}
+		
+		// clear existing diagram, if any
+		var svg = document.getElementById('svg');
+		while (svg.hasChildNodes()) 
+		{
+			svg.removeChild(svg.lastChild);
+		}
+		
+		
+		var g = document.createElementNS('http://www.w3.org/2000/svg','g');
+		g.setAttribute('id','viewport');
+		svg.appendChild(g);
+		
+		
+		td.Init(t, {svg_id: 'viewport', width:500, height:500, fontHeight:10, root_length:0.1} );
+		
+		td.CalcCoordinates();
+		td.Draw();
+		
+		// font size
+		var cssStyle = document.createElementNS('http://www.w3.org/2000/svg','style');
+		cssStyle.setAttribute('type','text/css');
+		
+		var font_size = Math.floor(td.settings.height/t.num_leaves);
+		font_size = Math.max(font_size, 1);
+		
+		var style=document.createTextNode("text{font-size:" + font_size + "px;}");
+		cssStyle.appendChild(style);
+		
+		svg.appendChild(cssStyle);
+
+		// label leaves...
+		
+		var n = new NodeIterator(t.root);
+		var q = n.Begin();
+		while (q != null)
+		{
+			if (q.IsLeaf())
+			{
+				switch (drawing_type)
+				{
+					case 'circle':
+					case 'circlephylogram':
+						var align = 'left';
+						var angle = q.angle * 180.0/Math.PI;
+						if ((q.angle > Math.PI/2.0) && (q.angle < 1.5 * Math.PI))
+						{
+							align = 'right';
+							angle += 180.0;
+						}
+						drawRotatedText('viewport', q.xy, q.label, angle, align)
+						break;
+				
+					case 'cladogram':
+					case 'rectanglecladogram':
+					case 'phylogram':
+					default:				
+						drawText('viewport', q.xy, q.label);
+						break;
+				}
+			}
+			q = n.Next();
+		}
+		
+				
+		// Scale to fit window
+		var bbox = svg.getBBox();
+		
+		var scale = Math.min(td.settings.width/bbox.width, td.settings.height/bbox.height);
+		
+		
+		// move drawing to centre of viewport
+		var viewport = document.getElementById('viewport');
+		baseMatrix = [1*scale, 0, 0, 1*scale, 0, 0];
+		setMatrix(viewport, baseMatrix);
+		
+		
+		// centre
+		bbox = svg.getBBox();
+		if (bbox.x < 0)
+		{
+		    pan(viewport, -bbox.x, -bbox.y);
+		}
+		
+		
+		
+		// pan
+		$('svg').svgPan('viewport');
+	}
+	
+
+}
+
+
+function smooth_scale(x) {
+    return (Math.pow(Math.abs(x),2) * (3-2*Math.abs(x)))
+}
+
+function getMatrix(viewport) {
+    return viewport.getAttribute('transform').split('(')[1].split(')')[0].split(',').map(parseFloat);
+}
+
+function setMatrix(viewport, matrix) {
+    viewport.setAttribute('transform', 'matrix(' + matrix.join(',') + ')');
+}
+
+function zoom(viewport, scale) {
+    matrix = getMatrix(viewport);
+    
+    for (var i = 0; i < matrix.length; i++)
+    {
+        matrix[i] *= scale;
+    }
+    
+    bbox = viewport.getBBox();
+    
+    matrix[4] += (1-scale) * bbox.width/2;
+    matrix[5] += (1-scale) * bbox.height/2;
+    
+    setMatrix(viewport, matrix);
+}
+
+function pan(viewport, dx, dy) {
+    matrix = getMatrix(viewport);
+    
+    matrix[4] += dx;
+    matrix[5] += dy;
+    
+    setMatrix(viewport, matrix);
+}
+
+function zoom_in() {
+    var viewport = document.getElementById('viewport');
+    gradual_zoom(viewport, 1.33);
+}
+
+function zoom_out() {
+    var viewport = document.getElementById('viewport');
+    gradual_zoom(viewport, 0.75);
+}
+
+function gradual_zoom(viewport, scale) {
+    var viewport = document.getElementById('viewport');
+    matrix = getMatrix(viewport);
+    
+    initial_scale = matrix[0];
+    new_scale = initial_scale * scale;
+    old_scale = initial_scale;
+    
+    steps = 25;
+    duration = 0.2;
+    i = 0;
+    function frame() {
+        this_scale = initial_scale + (new_scale-initial_scale) * smooth_scale(i);
+        this_step = this_scale / old_scale;
+        old_scale = this_scale;
+        i += 1/steps;
+        zoom(viewport, this_step)
+        if (i >= 1) {
+            clearInterval(id);
+        }
+    }
+    var id = setInterval(frame, 1000*duration/steps);
+}
