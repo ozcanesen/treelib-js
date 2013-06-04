@@ -2021,7 +2021,7 @@ function pan_to_mouse(e) {
     dx = (offset.left + container.offsetWidth/2) - e.pageX;
     dy = (offset.top + container.offsetHeight/2) - e.pageY;
     
-    gradual_pan(viewport, dx, dy);
+    gradual_pan(viewport, dx/2, dy/2);
 }
 
 function gradual_pan(viewport, dx, dy) {
