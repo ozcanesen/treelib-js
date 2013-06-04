@@ -2016,15 +2016,10 @@ function zoom_out() {
 function dbl_click_zoom(e) {
     var container = document.getElementById('treeContainer');
     var viewport = document.getElementById('viewport');
-    var rect = container.getBoundingClientRect();
+    offset = $(container).offset();
     
-    console.log(rect.left+(rect.right-rect.left)/2);
-    console.log(e.pageX);
-    console.log(rect.top+(rect.bottom-rect.top)/2);
-    console.log(e.pageY);
-    
-    dx = (rect.left + (rect.right - rect.left)/2) + document.body.scrollLeft - e.pageX;
-    dy = (rect.top + (rect.bottom - rect.top)/2) + document.body.scrollTop - e.pageY;
+    dx = (offset.left + container.offsetWidth/2) - e.pageX;
+    dy = (offset.top + container.offsetHeight/2) - e.pageY;
     
     gradual_pan(viewport, dx, dy);
     zoom_in();
