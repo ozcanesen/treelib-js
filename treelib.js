@@ -2013,7 +2013,44 @@ function zoom_out() {
     gradual_zoom(viewport, 0.75);
 }
 
+function dbl_click_zoom(e) {
+    var container = document.getElementById('treeContainer');
+    var viewport = document.getElementById('viewport');
+    var rect = container.getBoundingClientRect();
+    
+    console.log(rect.left+(rect.right-rect.left)/2);
+    console.log(e.pageX);
+    console.log(rect.top+(rect.bottom-rect.top)/2);
+    console.log(e.pageY);
+    
+    dx = (rect.left + (rect.right - rect.left)/2) + document.body.scrollLeft - e.pageX;
+    dy = (rect.top + (rect.bottom - rect.top)/2) + document.body.scrollTop - e.pageY;
+    
+    gradual_pan(viewport, dx, dy);
+    zoom_in();
+}
+
+function gradual_pan(viewport, dx, dy) {
+    steps = 25;
+    duration = 0.2;
+    i = 0;
+    function frame() {
+        i += 1/steps;
+        pan(viewport, dx/steps, dy/steps)
+        if (i >= 1) {
+            clearInterval(id);
+        }
+    }
+    var id = setInterval(frame, 1000*duration/steps);
+}
+
+var zooming = false;
+
 function gradual_zoom(viewport, scale) {
+    if (zooming) return;
+    
+    zooming = true;
+    
     var viewport = document.getElementById('viewport');
     matrix = getMatrix(viewport);
     
@@ -2035,4 +2072,6 @@ function gradual_zoom(viewport, scale) {
         }
     }
     var id = setInterval(frame, 1000*duration/steps);
+    
+    zooming = false;
 }

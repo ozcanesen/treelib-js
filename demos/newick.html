@@ -52,10 +52,10 @@
 	<button onclick="showtree('newick')">Show</button> <span id="message"></span>
 	</div>
 
-	<div id="treeContainer">
+	<div id="treeContainer" ondblclick="dbl_click_zoom(event)">
 	    <div id="zoomControls">
-	        <img src="../zoom-in.svg" width="50px" onclick="zoom_in()"/>
-	        <img src="../zoom-out.svg" width="50px" onclick="zoom_out()"/>
+	        <img src="../zoom-in.svg" width="50px" onclick="zoom_in()" ondblclick="event.stopPropagation()"/>
+	        <img src="../zoom-out.svg" width="50px" onclick="zoom_out()" ondblclick="event.stopPropagation()"/>
 	    </div>
 	    <svg id="svg" xmlns="http://www.w3.org/2000/svg" version="1.1">
 		    <g id="viewport">
