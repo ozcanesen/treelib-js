@@ -2013,7 +2013,7 @@ function zoom_out() {
     gradual_zoom(viewport, 0.75);
 }
 
-function dbl_click_zoom(e) {
+function pan_to_mouse(e) {
     var container = document.getElementById('treeContainer');
     var viewport = document.getElementById('viewport');
     offset = $(container).offset();
@@ -2022,7 +2022,6 @@ function dbl_click_zoom(e) {
     dy = (offset.top + container.offsetHeight/2) - e.pageY;
     
     gradual_pan(viewport, dx, dy);
-    zoom_in();
 }
 
 function gradual_pan(viewport, dx, dy) {
