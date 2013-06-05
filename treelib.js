@@ -1888,10 +1888,14 @@ function setMatrix(viewport, matrix) {
 
 function zoom(viewport, scale) {
     matrix = getMatrix(viewport);
+    old_scale = matrix[0];
+    if (scale * old_scale < 0.1) scale = 0.1/old_scale;
+    if (scale * old_scale > 100) scale = 100/old_scale;
     
     for (var i = 0; i < matrix.length; i++)
     {
         matrix[i] *= scale;
+        
     }
     
     bbox = viewport.getBBox();
@@ -2007,7 +2011,7 @@ function gradual_zoom(viewport, scale) {
         this_time = new Date()/1000;
         time_elapsed = this_time - last_time;
         last_time = this_time;
-        mult = scale < 1 ? Math.pow(zooming, 0.75) : Math.pow(zooming, 2.5);
+        mult = scale < 1 ? zooming : Math.pow(zooming, 2.5);
         this_scale = initial_scale + (new_scale-initial_scale) * mult;
         this_step = this_scale / old_scale;
         old_scale = this_scale;
