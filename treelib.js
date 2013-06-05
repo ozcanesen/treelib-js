@@ -1972,12 +1972,14 @@ function gradual_pan(viewport, dx, dy) {
     var id = setInterval(frame, 1000*duration/steps);
 }
 
-var zooming = false;
+var zooming = 0;
+var zoom_pressed = false;
+
+function start_zoom() { zoom_pressed = true; }
+function stop_zoom() { zoom_pressed = false; }
 
 function gradual_zoom(viewport, scale) {
-    if (zooming) return;
-    
-    zooming = true;
+    if (zooming > 0) return;
     
     var viewport = document.getElementById('viewport');
     matrix = getMatrix(viewport);
@@ -1988,22 +1990,22 @@ function gradual_zoom(viewport, scale) {
     
     steps = 25;
     duration = 0.5;
-    i = 0;
     last_time = new Date()/1000;
     function frame() {
+        console.log(zoom_pressed);
         this_time = new Date()/1000;
         time_elapsed = this_time - last_time;
         last_time = this_time;
-        this_scale = initial_scale + (new_scale-initial_scale) * smooth_scale(i);
+        mult = scale < 1 ? Math.pow(zooming, 0.75) : Math.pow(zooming, 2.5);
+        this_scale = initial_scale + (new_scale-initial_scale) * mult;
         this_step = this_scale / old_scale;
         old_scale = this_scale;
-        i += time_elapsed/duration;
+        zooming += time_elapsed/duration;
         zoom(viewport, this_step)
-        if (i >= 1) {
+        if (zooming >= 1 && !(zoom_pressed)) {
             clearInterval(id);
+            zooming = 0;
         }
     }
     var id = setInterval(frame, 1000*duration/steps);
-    
-    zooming = false;
 }
