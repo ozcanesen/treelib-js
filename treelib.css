@@ -35,6 +35,7 @@ div#treeContainer #zoomControls {
     width:50px;
     list-style:none;
     border:2px solid rgb(228,228,228);
+    margin:0;
 }
 
 div#treeContainer #zoomControls li {
