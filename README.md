@@ -8,3 +8,4 @@ Currently supports reading Newick trees and NEXUS-format tree files and renderin
 
 The demos folder contains simple web pages where you can paste in a Newick tree or a NEXUS tree file and get a tree in various styles.
 
+Live demo here: <http://www.unc.edu/~bdmorris/treelib-js/demo.html>
