@@ -1932,6 +1932,7 @@ function mouse_zoom_out(event) {
 }
 
 function pan_btn(dir) {
+    start_pan();
     var viewport = document.getElementById('viewport');
     matrix = getMatrix(viewport);
     scale = matrix[0];
@@ -1954,18 +1955,28 @@ function pan_to_mouse(e, scale) {
     gradual_pan(viewport, dx*(1-scale), dy*(1-scale));
 }
 
+var panning = 0;
+var pan_pressed = false;
+
+function start_pan() { pan_pressed = true; }
+function stop_pan() { pan_pressed = false; }
+
 function gradual_pan(viewport, dx, dy) {
+    if (panning) return;
     steps = 25;
     duration = 0.25;
-    i = 0;
+    panning = 0;
     last_time = new Date()/1000;
     function frame() {
         this_time = new Date()/1000;
         time_elapsed = this_time - last_time;
         last_time = this_time;
-        i += time_elapsed/duration;
-        pan(viewport, dx/steps, dy/steps)
-        if (i >= 1) {
+        panning += time_elapsed/duration;
+        if (panning >= 1) panning = 1;
+        d = smooth_scale(panning);
+        pan(viewport, d*dx/steps, d*dy/steps)
+        if (panning >= 1 && !(pan_pressed)) {
+            panning = 0;
             clearInterval(id);
         }
     }
