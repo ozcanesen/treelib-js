@@ -1943,8 +1943,6 @@ function pan_btn(dir) {
     d = 100;
     dx = dir == 'l' ? d : (dir == 'r' ? -d : 0);
     dy = dir == 'u' ? d : (dir == 'd' ? -d : 0);
-    dx *= scale;
-    dy *= scale;
     gradual_pan(viewport, dx, dy);
 }
 
