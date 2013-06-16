@@ -2022,3 +2022,7 @@ function gradual_zoom(viewport, scale) {
     }
     var id = setInterval(frame, 1000*duration/steps);
 }
+
+function download_svg() {
+    // TODO
+}
