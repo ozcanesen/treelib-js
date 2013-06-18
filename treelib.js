@@ -1717,6 +1717,9 @@ if (!String.prototype.trim)
 
 function draw_tree(element_id, drawing_type)
 {
+    var loading = document.getElementById('loading');
+    loading.style.visibility = 'shown';
+
     var t = new Tree();
     var element = document.getElementById(element_id);
     var newick = element.value;
@@ -1872,7 +1875,7 @@ function draw_tree(element_id, drawing_type)
 		$('svg').svgPan('viewport');
 	}
 	
-
+    loading.style.visibility = 'hidden';
 }
 
 
@@ -1902,7 +1905,7 @@ function zoom(viewport, scale) {
     
     bbox = viewport.getBBox();
     
-    matrix[4] += (1-scale) * bbox.width/2;
+    matrix[4] += (1-scale) * (bbox.width-50)/2;
     matrix[5] += (1-scale) * bbox.height/2;
     
     setMatrix(viewport, matrix);

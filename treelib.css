@@ -75,3 +75,11 @@ div#treeContainer svg {
     width:600px;
     height:500px;
 }
+
+img#loading {
+    position: absolute;
+    left:284px;
+    top:284px;
+    width:32px;
+    height:32px;
+}
