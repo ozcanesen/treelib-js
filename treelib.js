@@ -4,8 +4,14 @@
  *
  */
 
-var VIEWER_WIDTH = 600;
-var VIEWER_HEIGHT = 500;
+var VIEWER_WIDTH = 500;
+var VIEWER_HEIGHT = 600;
+
+$(document).ready(function() {
+    VIEWER_HEIGHT = $(window).height(); 
+    VIEWER_WIDTH = $(window).height();
+});
+
 var ZOOM_IN = 1.33;
 var ZOOM_OUT = 0.75;
 
@@ -45,27 +51,48 @@ function drawLine(svg_id, p0, p1)
 	line.setAttribute('style','stroke:black;stroke-width:1;');
 	line.setAttribute('d', linePath(p0, p1));
 	var svg = document.getElementById(svg_id);
-	svg.appendChild(line);
+	svg.insertBefore(line,svg.firstChild);
 }
 
+//--------------------------------------------------------------------------------------------------
+function drawCircle(svg_id, p, r, q)
+{
+	var circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+	circle.setAttribute('cx', p['x']);
+	circle.setAttribute('cy', p['y']);
+	circle.setAttribute('r', r);
+	circle.setAttribute('onmouseover', 'this.setAttribute("fill", "red")');
+	circle.setAttribute('onmouseout', 'this.setAttribute("fill", "black")');
+
+	circle.onclick = function() {
+		var t = new Tree();
+		t.root = q;
+		var str = t.WriteNewick();
+		console.log(str);
+		alert("Click event!\n\nsubtree dumped to browser console");
+	};
+	var svg = document.getElementById(svg_id);
+	svg.appendChild(circle);
+}
 //--------------------------------------------------------------------------------------------------
 function drawText(svg_id, p, string)
 {
-	var text = document.createElementNS('http://www.w3.org/2000/svg','text');
-	//newLine.setAttribute('id','node' + p.id);
-	text.setAttribute('style','alignment-baseline:middle');
-	text.setAttribute('x', p['x']);
-	text.setAttribute('y', p['y']);
-	
-	var textNode=document.createTextNode(string)
-	text.appendChild(textNode);
-	
-	var svg = document.getElementById(svg_id);
-	svg.appendChild(text);
+        var text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        //newLine.setAttribute('id','node' + p.id);
+        text.setAttribute('style','alignment-baseline:middle');
+        text.setAttribute('x', p['x']);
+        text.setAttribute('y', p['y']);
+        
+        var textNode=document.createTextNode(string)
+        text.appendChild(textNode);
+        
+        var svg = document.getElementById(svg_id);
+        svg.appendChild(text);
+        return p['x'] + Math.floor(text.getBBox().width) + 1;
 }
 
 //--------------------------------------------------------------------------------------------------
-function drawRotatedText(svg_id, p, string, angle, align)
+function drawRotatedText(svg_id, p, string, angle, align, angle_t)
 {
 	var text = document.createElementNS('http://www.w3.org/2000/svg','text');
 	//newLine.setAttribute('id','node' + p.id);
@@ -97,9 +124,48 @@ function drawRotatedText(svg_id, p, string, angle, align)
 			
 	var textNode=document.createTextNode(string)
 	text.appendChild(textNode);
+
 	
 	var svg = document.getElementById(svg_id);
 	svg.appendChild(text);
+	var box= text.getBBox();
+
+	var x= p['x'] + Math.cos(angle_t * (Math.PI / 180.0)) * (box.width + 2);
+	var y= p['y'] + Math.sin(angle_t * (Math.PI / 180.0)) * (box.width + 2);
+
+	return Math.floor(Math.sqrt(Math.pow(x,2)+ Math.pow(y,2))) + 1;
+}
+
+function drawRectangle(svg_id, q, height)
+{
+	p = q.xy
+	var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+	//newLine.setAttribute('id','node' + p.id);
+	rect.setAttribute('x', p['x']);
+	rect.setAttribute('y', p['y'] - height / 2.0);
+	rect.setAttribute('height', height);
+	rect.setAttribute('width', 1 + Math.random() * height * 10);
+
+	var svg = document.getElementById(svg_id);
+	svg.appendChild(rect);
+}
+
+function drawRotatedRectangle(svg_id, q, angle, max, height)
+{
+	var rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+	//newLine.setAttribute('id','node' + p.id);
+	rect.setAttribute('x', max);
+	rect.setAttribute('y', 0 - height / 2.0);
+	rect.setAttribute('height', height);
+	rect.setAttribute('width', 1 + Math.random() * height * 10);
+
+	if (angle != 0)
+	{
+		rect.setAttribute('transform', 'rotate(' + angle + ' 0 0)');
+	}	
+
+	var svg = document.getElementById(svg_id);
+	svg.appendChild(rect);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -137,7 +203,7 @@ function drawCircleArc(svg_id, p0, p1, radius, large_arc_flag)
 	arc.setAttribute('d', path)
 	
 	var svg = document.getElementById(svg_id);
-	svg.appendChild(arc);
+	svg.insertBefore(arc,svg.firstChild);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -781,7 +847,7 @@ TreeDrawer.prototype.DrawInternal = function(p)
 	if (anc)
 	{
 		var p1 = anc.xy;
-		drawLine(this.settings.svg_id, p0, p1);
+		drawLine(this.settings.svg_id, p0, p1);	
 	}
 }
 
@@ -827,6 +893,8 @@ TreeDrawer.prototype.DrawLabels = function(nexus)
 	
 	var n = new NodeIterator(this.t.root);
 	var q = n.Begin();
+
+	var max=0;
 	while (q != null)
 	{	
 		if (q.IsLeaf())
@@ -847,10 +915,15 @@ TreeDrawer.prototype.DrawLabels = function(nexus)
 			label_xy = q.xy;
 			label_xy['x'] += this.settings.fontHeight/2.0;
 			
-			drawText('viewport', label_xy, formatString(label));
+			i = newdrawText('viewport', label_xy, formatString(label));
+			if (i > max) {
+				max = i;
+			}
 		}
 		q = n.Next();
 	}
+
+	return max;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -905,7 +978,8 @@ RectangleTreeDrawer.prototype.DrawLeaf = function(p)
 		p1['x'] = anc.xy['x'];
 		p1['y'] = p0['y'];
 				
-		drawLine(this.settings.svg_id, p0, p1);		
+		drawLine(this.settings.svg_id, p0, p1);	
+
 	}
 }
 
@@ -918,6 +992,8 @@ RectangleTreeDrawer.prototype.DrawInternal = function(p)
 	p0['x'] = p.xy['x'];
 	p0['y'] = p.xy['y'];
 		
+	
+
 	var anc = p.ancestor;
 	if (anc)
 	{
@@ -926,7 +1002,8 @@ RectangleTreeDrawer.prototype.DrawInternal = function(p)
 		
 		drawLine(this.settings.svg_id, p0, p1);
 	}
-	
+	drawCircle(this.settings.svg_id, p0, this.leaf_gap / 2.25, p);	
+
 	// vertical line
 	var pl = p.child.xy;
 	var pr = p.child.GetRightMostSibling().xy;
@@ -937,6 +1014,8 @@ RectangleTreeDrawer.prototype.DrawInternal = function(p)
 	p1['y'] = pr['y'];
 	
 	drawLine(this.settings.svg_id, p0, p1);
+
+	
 }
 
 
@@ -1206,6 +1285,7 @@ CircleTreeDrawer.prototype.DrawInternal = function(p)
 		p1 = p.backarc;
 		
 		drawLine(this.settings.svg_id, p0, p1);
+		drawCircle(this.settings.svg_id, p0, (this.leaf_angle / Math.PI) * this.leaf_radius / 2 , p);	
 	}
 	
 	// draw arc
@@ -1215,6 +1295,7 @@ CircleTreeDrawer.prototype.DrawInternal = function(p)
 	
 	
 	var large_arc_flag = (Math.abs(p.child.GetRightMostSibling().angle - p.child.angle) > Math.PI) ? true : false;
+	
 	drawCircleArc(this.settings.svg_id, p0, p1, p.radius, large_arc_flag);
 	
 	
@@ -1531,6 +1612,7 @@ RadialTreeDrawer.prototype.DrawInternal = function(p)
 	{
 		var p1 = p.ancestor.xy;
 		drawLine(this.settings.svg_id, p0, p1);
+		drawCircle(this.settings.svg_id, p0, 50, p);
 	}
 }
 
@@ -1644,69 +1726,6 @@ function uniqueid(){
 
     return (idstr);
 }	
-
-//--------------------------------------------------------------------------------------------------
-function draw_tree_labels(nexus, t, drawing_type) {
-	// label leaves...
-	var n = new NodeIterator(t.root);
-	var q = n.Begin();
-	while (q != null)
-	{
-		if (q.IsLeaf())
-		{
-			var label = q.label;
-			
-			if (nexus.treesblock.translate)
-			{
-				if (nexus.treesblock.translate[label])
-				{
-					label = nexus.treesblock.translate[label];
-				}
-			}
-			
-			switch (drawing_type)
-			{
-				case 'radial':
-					var align = 'left';
-					var angle = q.angle * 180.0/Math.PI;
-					if ((q.angle < -Math.PI/2) || (q.angle > Math.PI/2))
-					{
-						align = 'right';
-						angle += 180.0;
-					}
-					drawRotatedText('viewport', q.xy, label, angle, align)
-					break;
-			
-				case 'circle':
-				case 'circlephylogram':
-					var align = 'left';
-					var angle = q.angle * 180.0/Math.PI;
-					if ((q.angle > Math.PI/2.0) && (q.angle < 1.5 * Math.PI))
-					{
-						align = 'right';
-						angle += 180.0;
-					}
-
-					var r = td.root_length + td.settings.width/2;
-								var pt = [];
-								pt['x'] = Math.cos(q.angle) * r;
-								pt['y'] = Math.sin(q.angle) * r;
-					drawRotatedText('viewport', pt, label, angle, align);
-
-					//drawRotatedText('viewport', q.xy, label, angle, align);
-					break;
-			
-				case 'cladogram':
-				case 'rectanglecladogram':
-				case 'phylogram':
-				default:				
-					drawText('viewport', q.xy, label);
-					break;
-			}
-		}
-		q = n.Next();
-	}
-}
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -1859,6 +1878,7 @@ if (!String.prototype.trim)
 	String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
 }
 
+
 function draw_tree(element_id, drawing_type)
 {
     var loading = document.getElementById('loading');
@@ -1959,9 +1979,10 @@ function draw_tree(element_id, drawing_type)
 		svg.appendChild(cssStyle);
 
 		// label leaves...
-		
 		var n = new NodeIterator(t.root);
 		var q = n.Begin();
+
+		var max = 0;
 		while (q != null)
 		{
 			if (q.IsLeaf())
@@ -1972,30 +1993,66 @@ function draw_tree(element_id, drawing_type)
 					case 'circlephylogram':
 						var align = 'left';
 						var angle = q.angle * 180.0/Math.PI;
+						var angle_t = angle;
 						if ((q.angle > Math.PI/2.0) && (q.angle < 1.5 * Math.PI))
 						{
 							align = 'right';
 							angle += 180.0;
 						}
-						drawRotatedText('viewport', q.xy, q.label, angle, align)
+						i = drawRotatedText('viewport', q.xy, q.label, angle, align, angle_t);
+						if (i > max) {
+							max = i;
+						}
 						break;
 				
 					case 'cladogram':
 					case 'rectanglecladogram':
 					case 'phylogram':
 					default:				
-						drawText('viewport', q.xy, q.label);
+						i = drawText('viewport', q.xy, q.label);
+						if (i > max) {
+							max= i;
+						}
+						break
 						break;
 				}
 			}
 			q = n.Next();
 		}
+		var n = new NodeIterator(t.root);
+		var q = n.Begin();
+		while (q != null)
+		{
+			if (q.IsLeaf())
+			{
+				switch (drawing_type)
+				{
+					case 'circle':
+					case 'circlephylogram':
+						var angle = q.angle * 180.0/Math.PI;
+						drawRotatedRectangle('viewport', q, angle, max, font_size);
+						//here
+						break;
+				
+					case 'cladogram':
+					case 'rectanglecladogram':
+					case 'phylogram':
+					default:
+						q.xy['x'] = max;
+						drawRectangle('viewport', q, font_size);
+						break
+						break;
+				}
+			}
+			q = n.Next();
+		}
+
 		
 				
 		// Scale to fit window
 		var bbox = svg.getBBox();
 		
-		var scale = Math.min(td.settings.width/bbox.width, td.settings.height/bbox.height) * 0.75;
+		var scale = Math.min(td.settings.width/bbox.width, td.settings.height/bbox.height) * 0.80;
 		
 		
 		// move drawing to centre of viewport
@@ -2027,6 +2084,7 @@ function draw_tree(element_id, drawing_type)
     var b64 = Base64.encode(svgString);
     $("#download").attr('href', "data:image/svg+xml;base64,\n" + b64);
 }
+
 
 
 function smooth_scale(x) {
